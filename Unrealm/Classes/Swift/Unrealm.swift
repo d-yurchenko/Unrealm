@@ -266,6 +266,16 @@ public extension RealmableBase {
     }
 }
 
+public extension RLMArray{
+    
+    @objc func contains(_ object: NSObject) -> Bool {
+        for i in 0..<self.count {
+            if let test = self.object(at: i) as? NSObject, test == object { return true }
+        }
+        return false
+    }
+}
+
 public protocol Realmable: RealmableBase {
     
 }
@@ -286,10 +296,18 @@ public extension Realmable {
 		let nilProperties = obj.value(forKey: "__nilProperties") as? RLMArray<NSString>
         
         for child in children {
-            guard let propertyName = child.label else {continue}
-            guard let property = try? info.property(named: propertyName) else {continue}
-            guard obj.responds(to: NSSelectorFromString(propertyName)) else {continue}
-            guard let value = obj.value(forKey: propertyName) else {continue}
+            guard let propertyName = child.label,
+                let property = try? info.property(named: propertyName),
+                obj.responds(to: NSSelectorFromString(propertyName)) else {continue}
+
+            var value: Any?
+            if let objValue = obj.value(forKey: propertyName) {
+                value = objValue
+            } else {
+                if let properyNameObject = propertyName as? NSObject, !(nilProperties?.contains(properyNameObject) ?? false) {
+                    value = 0
+                } else { continue }
+            }
             
             if let value = value as? Object {
                 var childValue = child.value as? RealmableBase
