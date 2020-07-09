@@ -270,7 +270,7 @@ public extension RLMArray{
     
     @objc func contains(_ object: NSObject) -> Bool {
         for i in 0..<self.count {
-            if let test = self.object(at: i) as? NSObject, test == object { return true }
+            if let storedObject = self.object(at: i) as? NSObject, storedObject == object { return true }
         }
         return false
     }
@@ -304,8 +304,12 @@ public extension Realmable {
             if let objValue = obj.value(forKey: propertyName) {
                 value = objValue
             } else {
-                if let properyNameObject = propertyName as? NSObject, !(nilProperties?.contains(properyNameObject) ?? false) {
-                    value = 0
+                if !(nilProperties?.contains(propertyName as NSObject) ?? false) {
+                    if property.type == Bool.self {
+                        value = false
+                    } else {
+                        value = 0
+                    }
                 } else { continue }
             }
             
